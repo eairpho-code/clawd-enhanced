@@ -154,6 +154,22 @@ const SCHEMA = {
     validate: (v) => Number.isInteger(v) && v >= 0 && v <= 60000,
   },
   lowPowerIdleMode: { type: "boolean", default: false },
+  banterEnabled: { type: "boolean", default: true },
+  banterColor: {
+    type: "string",
+    default: "#1e1e1e",
+    validate: (v) => typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v),
+  },
+  banterOpacity: {
+    type: "number",
+    default: 88,
+    validate: (v) => Number.isInteger(v) && v >= 10 && v <= 100,
+  },
+  banterScale: {
+    type: "number",
+    default: 100,
+    validate: (v) => Number.isInteger(v) && v >= 50 && v <= 200,
+  },
   allowEdgePinning: { type: "boolean", default: false },
   // When true, moving the pet between displays does not trigger a
   // proportional pixel-size recomputation. The pet keeps its current

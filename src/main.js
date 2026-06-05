@@ -137,6 +137,10 @@ const {
 } = require("./bubble-policy");
 const loginItemHelpers = require("./login-item");
 const PREFS_PATH = path.join(app.getPath("userData"), "clawd-prefs.json");
+
+// API key storage: userData, NOT project dir
+const { setStoragePaths } = require("./ai/api-client");
+setStoragePaths(app.getPath("userData"));
 const _initialPrefsLoad = prefsModule.load(PREFS_PATH);
 
 // Lazy helpers — these run inside the action `effect` callbacks at click time,
@@ -1172,6 +1176,201 @@ const { setState, applyState, updateSession, resolveDisplayState, getSvgOverride
         startStartupRecovery: _startStartupRecovery } = _state;
 const sessions = _state.sessions;
 
+// ── Banter bubble (personality quips) ──
+const { createBanterBubble } = require("./banter-bubble");
+const banterBubble = createBanterBubble({
+  color: _settingsController.get("banterColor") || "#1e1e1e",
+  opacity: _settingsController.get("banterOpacity") ?? 88,
+  scale: _settingsController.get("banterScale") ?? 100,
+});
+_stateCtx.showBanterBubble = (text) => {
+  if (_settingsController.get("banterEnabled") === false) return;
+  const bounds = getPetWindowBounds();
+  if (!bounds || !bounds.width) return;
+  banterBubble.show(text, bounds);
+};
+_stateCtx.isBanterEnabled = () => _settingsController.get("banterEnabled") !== false;
+
+// Track banter prefs changes
+_settingsController.subscribeKey("banterColor", ({ snapshot }) => {
+  banterBubble.updateConfig({ color: snapshot.banterColor || "#1e1e1e" });
+});
+_settingsController.subscribeKey("banterOpacity", ({ snapshot }) => {
+  banterBubble.updateConfig({ opacity: snapshot.banterOpacity ?? 88 });
+});
+_settingsController.subscribeKey("banterScale", ({ snapshot }) => {
+  banterBubble.updateConfig({ scale: snapshot.banterScale ?? 100 });
+});
+
+// ── Banter settings panel ──
+const { createBanterSettingsWindow } = require("./banter-settings");
+const banterSettingsPanel = createBanterSettingsWindow({
+  settingsController: _settingsController,
+  banterBubble,
+  getPetBounds: () => getPetWindowBounds(),
+  parentWin: null, // filled in after pet window creation
+});
+function openBanterSettings() {
+  banterSettingsPanel.open();
+}
+
+// ── AI Interaction Layer ──
+const banterModule = require("./banter");
+const { createMemoryStore } = require("./ai/memory-store");
+const { createApiClient } = require("./ai/api-client");
+const { createPromptBuilder } = require("./ai/prompt-builder");
+const { createAiRouter } = require("./ai/ai-router");
+const { createInteractionEngine } = require("./interaction-engine");
+
+const memoryStore = createMemoryStore();
+const apiClient = createApiClient({ apiKey: process.env.DEEPSEEK_API_KEY });
+const promptBuilder = createPromptBuilder({ memoryStore });
+const aiRouter = createAiRouter({ apiClient, promptBuilder });
+
+// ── Chat window ──
+const { createChatWindow } = require("./chat-window");
+const chatWindow = createChatWindow({ apiClient, aiRouter, getPetBounds: () => getPetWindowBounds(), getPersonality: promptBuilder.getPersonality });
+
+// ── API Key settings window ──
+const { createApiKeyWindow } = require("./api-key-window");
+const { saveStoredKey, loadStoredKey } = require("./ai/api-client");
+const apiKeyWindow = createApiKeyWindow({ saveKey: saveStoredKey, loadKey: loadStoredKey });
+
+// ── Ambient Banter — low-frequency easter-egg quips ──
+const { createAmbientBanter } = require("./ambient-banter");
+const ambientBanter = createAmbientBanter({
+  getPetState: () => _state.getCurrentState(),
+  getPetBounds: () => getPetWindowBounds(),
+  getWorkingDuration: () => {
+    let best = 0;
+    for (const [, s] of sessions) {
+      if (s.state === "working" || s.state === "thinking") {
+        best = Math.max(best, Date.now() - (s.startedAt || s.updatedAt || 0));
+      }
+    }
+    return best;
+  },
+  getLastErrorTime: () => {
+    let latest = 0;
+    for (const [, s] of sessions) {
+      if (s.state === "error" && (s.updatedAt || 0) > latest) latest = s.updatedAt || 0;
+    }
+    return latest;
+  },
+  showBubble: (text, bounds) => { if (bounds && bounds.width) banterBubble.show(text, bounds); },
+  isBusy: () => banterBubble.isVisible(),
+});
+ambientBanter.start();
+// Drag test: fire immediately on every drag-end
+const { ipcMain: _ipc } = require("electron");
+_ipc.on("drag-end", () => { ambientBanter.onDrag(); });
+
+const interactionEngine = createInteractionEngine({
+  interactionsPath: require("path").join(__dirname, "..", "data", "runtime", "interactions.json"),
+  aiRouter,
+  getPetState: () => _state.getCurrentState(),
+});
+
+// ── AI network tracker — lightweight TCP probe, quips on status change ──
+const { probeNetwork, getNetworkStatus } = require("./ai/api-client");
+(async () => {
+  await probeNetwork(); // initial baseline
+  let lastNetStatus = getNetworkStatus();
+  setInterval(async () => {
+    await probeNetwork();
+    const current = getNetworkStatus();
+    if (current === lastNetStatus || current === null) return;
+    lastNetStatus = current;
+    const state = current ? "ai_back" : "ai_gone";
+    const text = banterModule.pick(state);
+    if (!text) return;
+    const bounds = getPetWindowBounds();
+    if (bounds && bounds.width) {
+      banterBubble.show(text, bounds);
+      console.log("Clawd AI: network", current ? "online" : "offline", "|", text);
+    }
+  }, 60000);
+})();
+
+// ── Click handler: 70% normal quip, 30% interaction event ──
+ipcMain.on("banter-click", () => {
+  if (_settingsController.get("banterEnabled") === false) return;
+  const bounds = getPetWindowBounds() || { x: 500, y: 300, width: 300, height: 200 };
+  if (!bounds || !bounds.width) return;
+  interactionEngine.noteClick();
+
+  // Tier 1: 70% normal quip
+  if (!interactionEngine.shouldInteract()) {
+    const petState = _state.getCurrentState();
+    const sleepy = petState === "sleeping" || petState === "dozing" || petState === "yawning" || petState === "collapsing";
+    const category = sleepy ? "sleeping_click" : "click";
+    const text = banterModule.pick(category);
+    if (text) banterBubble.show(text, bounds);
+    return;
+  }
+
+  // Tier 2: 30% interaction — generate question (AI or local)
+  interactionEngine.generateQuestion().then((interaction) => {
+    if (!interaction) {
+      const petState = _state.getCurrentState();
+      const sleepy = petState === "sleeping" || petState === "dozing" || petState === "yawning" || petState === "collapsing";
+      const cat = sleepy ? "sleeping_click" : "click";
+      const text = banterModule.pick(cat);
+      if (text) banterBubble.show(text, bounds);
+      return;
+    }
+    banterBubble.showInteraction(
+      interaction.question,
+      interaction.choices.map((c) => ({ label: c.label })),
+      bounds,
+      async (choiceIndex) => {
+        const result = await interactionEngine.respond(interaction, choiceIndex);
+        banterBubble.showReply(result.reply);
+        // Budget exhaustion quip (once per session)
+        if (aiRouter.shouldQuipBudget()) {
+          const q = banterModule.pick("budget_exhausted");
+          if (q) {
+            setTimeout(() => {
+              const b = getPetWindowBounds();
+              if (b && b.width) banterBubble.show(q, b);
+            }, 1500);
+          }
+        }
+      }
+    );
+  });
+});
+
+// ── Dev behavior banter: observe npm, git, server actions and quip ──
+const { createDevBehavior } = require("./dev-behavior");
+function getActiveSessionCwd() {
+  let bestCwd = null;
+  let bestTime = 0;
+  for (const [, s] of sessions) {
+    if (s.cwd && s.updatedAt > bestTime) {
+      bestTime = s.updatedAt;
+      bestCwd = s.cwd;
+    }
+  }
+  return bestCwd;
+}
+const devBehavior = createDevBehavior({
+  getActiveCwd: getActiveSessionCwd,
+  showBubble: (state) => {
+    if (_settingsController.get("banterEnabled") === false) return;
+    const text = banterModule.pick(state);
+    if (!text) return;
+    const bounds = getPetWindowBounds();
+    if (!bounds || !bounds.width) return;
+    banterBubble.show(text, bounds);
+  },
+});
+devBehavior.start(getActiveSessionCwd());
+// Hook into Bash tool events from server-route-state
+_stateCtx.onBashToolEvent = (_event, command, exitCode, cwd) => {
+  devBehavior.onBashCommand(command, exitCode, cwd);
+};
+
 // ── Hit-test: SVG bounding box → screen coordinates ──
 function getHitRectScreen(bounds) { return petWindowRuntime.getHitRectScreen(bounds); }
 function getUpdateBubbleAnchorRect(bounds) { return petWindowRuntime.getUpdateBubbleAnchorRect(bounds); }
@@ -2179,6 +2378,42 @@ const _menuCtx = {
   getActiveThemeCapabilities: () => themeRuntime.getActiveThemeCapabilities(),
   ensureUserThemesDir: () => themeLoader.ensureUserThemesDir(),
   openSettingsWindow: () => settingsWindowRuntime.open(),
+  openBanterSettings: () => openBanterSettings(),
+  openApiKeyWindow: () => apiKeyWindow.open(),
+  openChatWindow: () => chatWindow.open(),
+  isAiAvailable: () => aiRouter.isAiEnabled(),
+  getBanterEnabled: () => _settingsController.get("banterEnabled") !== false,
+  toggleBanter: (enabled) => _settingsController.applyUpdate("banterEnabled", enabled),
+  getAiMenuStatus: () => {
+    const { getBudgetStats, getNetworkStatus, getLastTestResult, resolveApiKey } = require("./ai/api-client");
+    const budget = getBudgetStats();
+    const networkOnline = getNetworkStatus();
+    const hasKey = !!resolveApiKey();
+    const lastTest = getLastTestResult();
+    const cooldown = aiRouter.getCooldownStatus();
+
+    // 5-state model
+    let aiState;
+    if (networkOnline === false) {
+      aiState = "OFFLINE";
+    } else if (!hasKey) {
+      aiState = "DISABLED";
+    } else if (!lastTest || !lastTest.at) {
+      aiState = "READY";
+    } else if (lastTest.ok === true) {
+      aiState = "ONLINE";
+    } else {
+      aiState = "ERROR";
+    }
+
+    return {
+      state: aiState,
+      used: budget.used,
+      total: budget.total,
+      remaining: budget.remaining,
+      cooldown,
+    };
+  },
 };
 const _menu = require("./menu")(_menuCtx);
 const { t, buildContextMenu, buildTrayMenu, rebuildAllMenus, createTray,
@@ -2525,8 +2760,14 @@ function createWindow() {
   });
 
   // Event-level safety net for position sync
-  win.on("move", () => petWindowRuntime.syncFloatingWindowsAfterPetBoundsChange());
-  win.on("resize", () => petWindowRuntime.syncFloatingWindowsAfterPetBoundsChange());
+  win.on("move", () => {
+    petWindowRuntime.syncFloatingWindowsAfterPetBoundsChange();
+    if (banterBubble.isVisible()) banterBubble.updatePosition(getPetWindowBounds());
+  });
+  win.on("resize", () => {
+    petWindowRuntime.syncFloatingWindowsAfterPetBoundsChange();
+    if (banterBubble.isVisible()) banterBubble.updatePosition(getPetWindowBounds());
+  });
 
   syncSessionHudVisibility();
 

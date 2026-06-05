@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   onCloudlingPointer: (callback) => ipcRenderer.on("cloudling-pointer", (_, payload) => callback(payload)),
   onWakeFromDoze: (callback) => ipcRenderer.on("wake-from-doze", () => callback()),
   onDndChange: (callback) => ipcRenderer.on("dnd-change", (_, enabled) => callback(enabled)),
+  onBanter: (cb) => ipcRenderer.on("banter-show", (_, text) => cb(text)),
   onMiniModeChange: (cb) => ipcRenderer.on("mini-mode-change", (_, enabled, edge, options) => cb(enabled, edge, options)),
   onMiniClip: (cb) => ipcRenderer.on("mini-clip", (_, info) => cb(info)),
   onLowPowerIdleModeChange: (cb) => ipcRenderer.on("low-power-idle-mode-change", (_, enabled) => cb(enabled)),

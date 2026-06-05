@@ -1,4 +1,4 @@
-const { formatDetail, truncate } = window.ClawdBubbleFormat;
+const { formatDetail, truncate } = window.ClawdBubbleFormat;#y
 const card = document.getElementById("card");
 const toolPill = document.getElementById("toolPill");
 const toolPillText = document.getElementById("toolPillText");

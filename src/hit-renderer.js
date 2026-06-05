@@ -171,9 +171,10 @@ function handleClick(clientX) {
   clickCount++;
   if (clickCount === 1) {
     firstClickDir = clientX < area.offsetWidth / 2 ? "left" : "right";
-    // First click reveals the session HUD. Lightweight side effect — NOT
-    // gated by isReacting (HUD reveal is independent of pet animation).
-    window.hitAPI.revealSessionHud();
+    // Show a random click-quip bubble below the pet
+    if (typeof window.hitAPI.showBanterOnClick === "function") {
+      window.hitAPI.showBanterOnClick();
+    }
   }
 
   if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; }

@@ -26,6 +26,10 @@
     "sessionStaleMs",
     "workingStaleMs",
     "detachedIdleStaleMs",
+    "banterEnabled",
+    "banterColor",
+    "banterOpacity",
+    "banterScale",
   ]);
   const BUBBLE_POLICY_KEYS = new Set([
     "permissionBubblesEnabled",
@@ -151,6 +155,35 @@
         key: "bubbleFollowPet",
         labelKey: "rowBubbleFollow",
         descKey: "rowBubbleFollowDesc",
+      }),
+    ]));
+
+    parent.appendChild(helpers.buildSection(t("sectionBanter"), [
+      helpers.buildSwitchRow({
+        key: "banterEnabled",
+        labelKey: "rowBanterEnabled",
+        descKey: "rowBanterEnabledDesc",
+      }),
+      buildBanterColorRow(),
+      helpers.buildNumberInputRow({
+        key: "banterOpacity",
+        labelKey: "rowBanterOpacity",
+        descKey: "rowBanterOpacityDesc",
+        unitKey: "%",
+        toDisplay: (v) => v,
+        fromDisplay: (v) => Math.max(10, Math.min(100, Number(v) || 88)),
+        min: 10,
+        max: 100,
+      }),
+      helpers.buildNumberInputRow({
+        key: "banterScale",
+        labelKey: "rowBanterScale",
+        descKey: "rowBanterScaleDesc",
+        unitKey: "%",
+        toDisplay: (v) => v,
+        fromDisplay: (v) => Math.max(50, Math.min(200, Number(v) || 100)),
+        min: 50,
+        max: 200,
       }),
     ]));
   }
@@ -1583,6 +1616,39 @@
       state.mountedControls.soundSummary.syncFromSnapshot();
     }
     return true;
+  }
+
+  function buildBanterColorRow() {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML =
+      `<div class="row-text">` +
+        `<span class="row-label"></span>` +
+        `<span class="row-desc"></span>` +
+      `</div>` +
+      `<div class="row-control">` +
+        `<input type="text" class="banter-color-input" maxlength="7" placeholder="#1e1e1e" />` +
+      `</div>`;
+    row.querySelector(".row-label").textContent = t("rowBanterColor");
+    row.querySelector(".row-desc").textContent = t("rowBanterColorDesc");
+
+    const input = row.querySelector(".banter-color-input");
+    const stored = (state.snapshot && state.snapshot.banterColor) || "#1e1e1e";
+    input.value = stored;
+
+    let commitTimer = null;
+    input.addEventListener("input", () => {
+      if (commitTimer) clearTimeout(commitTimer);
+      commitTimer = setTimeout(() => {
+        commitTimer = null;
+        const v = input.value.trim();
+        if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+          window.settingsAPI.update("banterColor", v.toLowerCase());
+        }
+      }, 600);
+    });
+
+    return row;
   }
 
   function init(core) {

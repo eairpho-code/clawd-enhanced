@@ -194,6 +194,15 @@ const updateRegistry = {
     0,
     MAX_AUTO_CLOSE_SECONDS
   ),
+  banterEnabled: requireBoolean("banterEnabled"),
+  banterColor(value) {
+    if (typeof value !== "string" || !/^#[0-9a-fA-F]{6}$/.test(value)) {
+      return { status: "error", message: "banterColor must be a hex color like #1e1e1e" };
+    }
+    return { status: "ok" };
+  },
+  banterOpacity: requireIntegerInRange("banterOpacity", 10, 100),
+  banterScale: requireIntegerInRange("banterScale", 50, 200),
   // Session stale-cleanup intervals. Cross-field invariant
   // (sessionStaleMs > 0 -> workingStaleMs <= sessionStaleMs) is enforced
   // here against the live snapshot AND atomically through the

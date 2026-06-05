@@ -1,5 +1,20 @@
 node_modules/
 dist/
+
+# Logs
+*.log
+logs/
+
+# User data (runtime state, never in repo)
+userData/
+
+# Local dev data — must NOT be committed
+data/apikey.txt
+data/pet-memory.json
+data/ai-budget.json
+data/question-memory.json
+data/chat-memory.json
+data/*-memory.json
 .env
 __pycache__/
 *.pyc
@@ -108,3 +123,7 @@ scripts/*
 
 # Cursor local config (MCP, rules from omc setup)
 .cursor/
+dist-packaged/
+
+# Runtime user data (DO NOT SHIP)
+data/runtime/

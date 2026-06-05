@@ -99,6 +99,7 @@ function handleStatePost(req, res, options) {
       const toolInputFingerprint = typeof data.tool_input_fingerprint === "string" && data.tool_input_fingerprint
         ? data.tool_input_fingerprint
         : null;
+      const toolInput = (data.tool_input && typeof data.tool_input === "object") ? data.tool_input : null;
       // Session title (Claude Code /rename or Codex turn_context.summary).
       // Non-string / empty values are silently dropped - matches the
       // "ignore + fall back" pattern used by cwd / agent_id above.
@@ -137,6 +138,13 @@ function handleStatePost(req, res, options) {
           return;
         }
         if (event === "PostToolUse" || event === "PostToolUseFailure" || event === "Stop") {
+          // Dev behavior: notify Bash tool events
+          if ((event === "PostToolUse" || event === "PostToolUseFailure") && toolName === "Bash" && toolInput && typeof toolInput.command === "string") {
+            const exitCode = event === "PostToolUseFailure" ? 1 : 0;
+            if (typeof ctx.onBashToolEvent === "function") {
+              ctx.onBashToolEvent(event, toolInput.command, exitCode, cwd);
+            }
+          }
           const perm = findPendingPermissionForStateEvent(ctx.pendingPermissions, {
             sessionId: sid,
             toolName,

@@ -1,0 +1,56 @@
+[
+  {
+    "id": "mood_check",
+    "question": "你今天状态怎么样？",
+    "choices": [
+      { "label": "很好", "intent": "agree", "valence": 2, "power": "equal", "reply": "那继续保持！本虾看好你 💪", "repeatReply": "你还是这么精神！", "changedReplies": ["你改主意了？之前可不是这么说的 😏"], "friendship": 1 },
+      { "label": "一般", "intent": "neutral", "valence": 0, "power": "equal", "reply": "平平淡淡才是真~", "repeatReply": "稳定输出，挺好的", "changedReplies": ["哦？状态有变化了"], "friendship": 0 },
+      { "label": "快死了", "intent": "agree", "valence": -2, "power": "equal", "reply": "那更要休息一下啊！别硬撑 😟", "repeatReply": "怎么又不行了…保重啊", "changedReplies": ["状态变了…休息一下吧"], "friendship": 2 }
+    ]
+  },
+  {
+    "id": "run_prediction",
+    "question": "你觉得这次运行会成功吗？",
+    "choices": [
+      { "label": "会", "intent": "agree", "valence": 2, "power": "equal", "reply": "你的自信让我害怕 😅", "repeatReply": "一如既往地自信，respect", "changedReplies": ["变乐观了？发生了什么好事"], "friendship": 1 },
+      { "label": "不会", "intent": "agree", "valence": -1, "power": "equal", "reply": "至少你有经验…祝好运", "repeatReply": "悲观主义者的稳定性不错", "changedReplies": ["变悲观了？现实打击到了？"], "friendship": 0 },
+      { "label": "不敢说", "intent": "neutral", "valence": 0, "power": "equal", "reply": "最真实的答案 😌", "repeatReply": "谨慎如你", "changedReplies": ["有想法了？不错"], "friendship": 1 }
+    ]
+  },
+  {
+    "id": "code_quality",
+    "question": "你对自己刚写的代码满意吗？",
+    "choices": [
+      { "label": "很满意", "intent": "agree", "valence": 3, "power": "equal", "reply": "牛！请收下本虾的钳子 🦞", "repeatReply": "还是这么自信，代码质量应该确实不错", "changedReplies": ["变得自信了！看来这次写得不错"], "friendship": 2 },
+      { "label": "还行", "intent": "neutral", "valence": 0, "power": "equal", "reply": "差不多就行，迭代才是王道", "repeatReply": "稳定中位数选手", "changedReplies": ["态度变了呢"], "friendship": 0 },
+      { "label": "一坨答辩", "intent": "agree", "valence": -2, "power": "equal", "reply": "哈哈哈至少你诚实，下次会更好", "repeatReply": "又写成一坨了？没关系慢慢来", "changedReplies": ["这次对自己这么狠？"], "friendship": 1 }
+    ]
+  },
+  {
+    "id": "coffee_break",
+    "question": "休息一下喝杯咖啡？☕",
+    "choices": [
+      { "label": "好主意", "intent": "agree", "valence": 2, "power": "equal", "reply": "去吧！本虾帮你看家", "repeatReply": "咖啡党永远忠诚 ☕", "changedReplies": ["今天想休息了？难得"], "friendship": 1 },
+      { "label": "再来五分钟", "intent": "neutral", "valence": 0, "power": "equal", "reply": "「五分钟」…我懂 😏", "repeatReply": "又是五分钟，程序员的时间单位果然不一样", "changedReplies": ["五分钟到了？"], "friendship": 0 },
+      { "label": "不喝咖啡", "intent": "reject", "valence": -1, "power": "equal", "reply": "茶党？还是纯靠意志力？", "repeatReply": "意志力战士，respect", "changedReplies": ["今天不喝咖啡了？也行"], "friendship": 0 }
+    ]
+  },
+  {
+    "id": "life_advice",
+    "question": "需要本虾给你一个人生建议吗？",
+    "choices": [
+      { "label": "来吧", "intent": "agree", "valence": 2, "power": "user", "reply": "Ctrl+S 就是你最好的朋友。", "repeatReply": "今天的建议和上次一样：Ctrl+S。", "changedReplies": ["这次想听了？成长了"], "friendship": 1 },
+      { "label": "不要", "intent": "reject", "valence": -1, "power": "user", "reply": "好的，那我闭嘴 🤐", "repeatReply": "依然拒绝我的智慧之光", "changedReplies": ["今天不想听？也行"], "friendship": -1 },
+      { "label": "你一只虾懂什么", "intent": "insult", "valence": -3, "power": "ai", "reply": "我懂的比你想象的多…毕竟看过你写 bug", "repeatReply": "我依然懂的比你想象的多", "changedReplies": ["开始不友好了 😒", "我被否定了", "态度变差了"], "friendship": 0 }
+    ]
+  },
+  {
+    "id": "bug_confession",
+    "question": "老实交代，刚才那个 bug 是不是你写的？",
+    "choices": [
+      { "label": "不是", "intent": "reject", "valence": -1, "power": "equal", "reply": "嗯…我选择相信你（暂时）🙄", "repeatReply": "又是「不是」，可疑度+1", "changedReplies": ["这次改口了？可疑度上升 🤨"], "friendship": 0 },
+      { "label": "是…", "intent": "agree", "valence": 0, "power": "equal", "reply": "没关系！Bug 是通往伟大的阶梯", "repeatReply": "诚实依旧，Bug 路上你不孤单", "changedReplies": ["终于承认了？成长了"], "friendship": 2 },
+      { "label": "是 AI 写的", "intent": "neutral", "valence": 0, "power": "ai", "reply": "甩锅给 AI，经典操作 👍", "repeatReply": "又甩锅给 AI，老套路了", "changedReplies": ["改口甩锅给 AI 了？"], "friendship": -1 }
+    ]
+  }
+]

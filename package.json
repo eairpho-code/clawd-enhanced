@@ -10,6 +10,7 @@
     "build:win:arm64": "electron-builder --win nsis:arm64",
     "build:win:all": "electron-builder --win nsis:x64 nsis:arm64",
     "build:mac": "electron-builder --mac",
+    "dist": "electron-builder --mac --publish=never",
     "build:linux": "electron-builder --linux",
     "build:all": "electron-builder --win --mac --linux",
     "fetch:sidecars": "node scripts/fetch-sidecar-binaries.js",
@@ -42,7 +43,8 @@
     "uninstall:codex-debug-hooks": "node hooks/codex-debug-install.js --uninstall",
     "install:hermes-plugin": "node hooks/hermes-install.js",
     "uninstall:hermes-plugin": "node hooks/hermes-install.js --uninstall",
-    "register-protocol:dev": "node launch.js --register-protocol"
+    "register-protocol:dev": "node launch.js --register-protocol",
+    "dev:app": "node scripts/dev-entry.js"
   },
   "keywords": [
     "clawd",
@@ -160,11 +162,13 @@
         "owner": "rullerzhou-afk",
         "repo": "clawd-on-desk"
       }
-    ]
+    ],
+    "electronVersion": "41.0.2"
   },
   "devDependencies": {
     "electron": "^41.0.2",
-    "electron-builder": "^26.8.1"
+    "electron-builder": "^26.8.1",
+    "electron-packager": "^17.1.2"
   },
   "dependencies": {
     "electron-updater": "^6.8.3",

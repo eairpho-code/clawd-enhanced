@@ -152,8 +152,46 @@ module.exports = function initMenu(ctx) {
         },
       );
     }
+    // ── AI status (read-only, rebuilt each time menu opens) ──
+    if (typeof ctx.getAiMenuStatus === "function") {
+      const ai = ctx.getAiMenuStatus();
+      const stateIcons = { ONLINE: "●", READY: "◐", DISABLED: "○", OFFLINE: "✕", ERROR: "⚠" };
+      const icon = stateIcons[ai.state] || "?";
+      items.push(
+        { type: "separator" },
+        { label: `AI  ${icon} ${ai.state}`, enabled: false },
+        { label: `   ${ai.used} / ${ai.total} calls today`, enabled: false },
+        { label: `   ${ai.remaining} remaining`, enabled: false },
+        { label: `   cooldown: ${ai.cooldown}`, enabled: false },
+        { type: "separator" },
+      );
+    }
     items.push(
+      {
+        label: "API Key…",
+        click: () => { if (typeof ctx.openApiKeyWindow === "function") ctx.openApiKeyWindow(); },
+      },
       { type: "separator" },
+      {
+        label: "Chat with Clawd…",
+        enabled: typeof ctx.isAiAvailable === "function" ? ctx.isAiAvailable() : false,
+        click: () => { if (typeof ctx.openChatWindow === "function") ctx.openChatWindow(); },
+      },
+      { type: "separator" },
+      {
+        type: "checkbox",
+        label: "Banter",
+        checked: typeof ctx.getBanterEnabled === "function" ? ctx.getBanterEnabled() : true,
+        click: (mi) => {
+          if (typeof ctx.toggleBanter === "function") ctx.toggleBanter(mi.checked);
+        },
+      },
+      {
+        label: "Banter Settings…",
+        click: () => {
+          if (typeof ctx.openBanterSettings === "function") ctx.openBanterSettings();
+        },
+      },
       {
         label: t("settings"),
         click: () => ctx.openSettingsWindow(),
@@ -359,8 +397,45 @@ module.exports = function initMenu(ctx) {
         },
       );
     }
+    // ── AI status (read-only) ──
+    if (typeof ctx.getAiMenuStatus === "function") {
+      const ai = ctx.getAiMenuStatus();
+      const icons = { ONLINE: "●", READY: "◐", DISABLED: "○", OFFLINE: "✕", ERROR: "⚠" };
+      template.push(
+        { type: "separator" },
+        { label: `AI  ${icons[ai.state] || "?"} ${ai.state}`, enabled: false },
+        { label: `   ${ai.used} / ${ai.total} calls today`, enabled: false },
+        { label: `   ${ai.remaining} remaining`, enabled: false },
+        { label: `   cooldown: ${ai.cooldown}`, enabled: false },
+        { type: "separator" },
+      );
+    }
     template.push(
+      {
+        label: "API Key…",
+        click: () => { if (typeof ctx.openApiKeyWindow === "function") ctx.openApiKeyWindow(); },
+      },
       { type: "separator" },
+      {
+        label: "Chat with Clawd…",
+        enabled: typeof ctx.isAiAvailable === "function" ? ctx.isAiAvailable() : false,
+        click: () => { if (typeof ctx.openChatWindow === "function") ctx.openChatWindow(); },
+      },
+      { type: "separator" },
+      {
+        type: "checkbox",
+        label: "Banter",
+        checked: typeof ctx.getBanterEnabled === "function" ? ctx.getBanterEnabled() : true,
+        click: (mi) => {
+          if (typeof ctx.toggleBanter === "function") ctx.toggleBanter(mi.checked);
+        },
+      },
+      {
+        label: "Banter Settings…",
+        click: () => {
+          if (typeof ctx.openBanterSettings === "function") ctx.openBanterSettings();
+        },
+      },
       {
         label: t("settings"),
         click: () => ctx.openSettingsWindow(),
@@ -396,8 +471,13 @@ module.exports = function initMenu(ctx) {
       : (SIZES[sizeKey] || ctx.getCurrentPixelSize());
     if (!ctx.miniHandleResize(sizeKey)) {
       if (ctx.win && !ctx.win.isDestroyed()) {
-        const { x, y } = ctx.getPetWindowBounds();
-        const clamped = ctx.clampToScreenVisual(x, y, size.width, size.height);
+        const cur = ctx.getPetWindowBounds();
+        // Resize from center so the pet scales around its own midpoint
+        const cx = cur.x + cur.width / 2;
+        const cy = cur.y + cur.height / 2;
+        const newX = cx - size.width / 2;
+        const newY = cy - size.height / 2;
+        const clamped = ctx.clampToScreenVisual(newX, newY, size.width, size.height);
         ctx.applyPetWindowBounds({ ...clamped, width: size.width, height: size.height });
       }
     }

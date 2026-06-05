@@ -955,6 +955,24 @@ window.electronAPI.onKimiPermissionPulse(() => {
   }
 });
 
+// --- Banter speech bubble ---
+window.electronAPI.onBanter((text) => {
+  const old = document.getElementById("banter-bubble");
+  if (old) old.remove();
+
+  const bubble = document.createElement("div");
+  bubble.id = "banter-bubble";
+  bubble.textContent = text;
+  document.body.appendChild(bubble);
+
+  setTimeout(() => {
+    bubble.classList.add("banter-fade-out");
+    setTimeout(() => {
+      if (bubble.isConnected) bubble.remove();
+    }, 400);
+  }, 2500);
+});
+
 // --- Eye tracking (idle state only) ---
 // Two systems coexist:
 //   1. Single-target (legacy): eyeTarget/bodyTarget/shadowTarget + applyEyeMove

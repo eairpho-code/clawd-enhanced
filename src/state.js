@@ -34,8 +34,11 @@ const {
   sessionSnapshotSignature,
 } = require("./state-session-snapshot");
 const { getAgentIconUrl } = require("./state-agent-icons");
+const banter = require("./banter");
 
 module.exports = function initState(ctx) {
+
+banter.load(require("path").join(__dirname, "..", "data", "banter.json"));
 
 const _getCursor = ctx.getCursorScreenPoint || (screen ? () => screen.getCursorScreenPoint() : null);
 const _kill = ctx.processKill || process.kill.bind(process);
@@ -439,6 +442,8 @@ function applyState(state, svgOverride, options = {}) {
   currentHitBox = resolveHitBoxForSvg(svg);
 
   ctx.sendToRenderer("state-change", state, svg);
+  const quip = banter.pick(state);
+  if (quip && typeof ctx.showBanterBubble === "function") ctx.showBanterBubble(quip);
   ctx.syncHitWin();
   ctx.sendToHitWin("hit-state-sync", { currentSvg: svg, currentState: state });
   ctx.sendToHitWin("hit-cancel-reaction");

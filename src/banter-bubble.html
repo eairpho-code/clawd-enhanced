@@ -1,0 +1,78 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+:root{
+  --bg:rgba(30,30,30,0.88);
+  --fg:#f0f0f0;
+  --btn:rgba(55,55,55,0.85);
+  --btn-hover:rgba(75,75,75,0.88);
+  --btn-active:rgba(95,95,95,0.88);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:transparent;overflow:visible;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-user-select:none;user-select:none}
+#wrap{display:inline-block;padding-top:7px}
+#bubble{
+  background:var(--bg);color:var(--fg);font-size:14px;line-height:1.4;
+  padding:6px 14px;border-radius:10px;text-align:center;
+  box-shadow:0 2px 8px rgba(0,0,0,0.3);position:relative;
+  min-width:100px;max-width:420px;
+  word-break:break-word;
+  animation:in 150ms ease-out forwards;
+}
+#bubble::after{
+  content:"";position:absolute;top:-7px;left:50%;transform:translateX(-50%);
+  width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;
+  border-bottom:7px solid var(--bg);
+}
+#bubble.out{animation:out 120ms ease-in forwards}
+.choices{display:flex;gap:6px;margin-top:7px;justify-content:center;flex-wrap:wrap;min-width:100px;max-width:420px}
+.choices button{
+  background:var(--btn);color:var(--fg);
+  border:none;border-radius:12px;padding:4px 14px;font-size:13px;cursor:pointer;
+  transition:background .15s;font-family:inherit;white-space:nowrap;
+}
+.choices button:hover{background:var(--btn-hover)}
+.choices button:active{background:var(--btn-active)}
+.choices button:disabled{opacity:0.5;cursor:default}
+@keyframes in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+@keyframes out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-3px)}}
+</style></head><body>
+<div id="wrap"><div id="bubble"></div><div class="choices" id="choices"></div></div>
+<script>
+const b=document.getElementById("bubble");
+const c=document.getElementById("choices");
+const w=document.getElementById("wrap");
+
+function report(){
+  requestAnimationFrame(()=>{
+    const rw=Math.ceil(w.scrollWidth);
+    const rh=Math.ceil(w.scrollHeight);
+    window.banterBubble.reportSize(rw,rh);
+  });
+}
+
+window.banterBubble.onShowText((text)=>{
+  c.innerHTML="";c.style.display="none";
+  b.textContent=text;b.classList.remove("out");
+  report();
+});
+
+window.banterBubble.onShowInteraction((data)=>{
+  b.textContent=data.question;b.classList.remove("out");
+  c.innerHTML="";c.style.display="flex";
+  data.choices.forEach((ch,i)=>{
+    const btn=document.createElement("button");
+    btn.textContent=ch.label;
+    btn.addEventListener("click",()=>{
+      c.querySelectorAll("button").forEach(x=>x.disabled=true);
+      window.banterBubble.choose(i);
+    });
+    c.appendChild(btn);
+  });
+  report();
+});
+
+window.banterBubble.onShowReply((text)=>{
+  c.innerHTML="";c.style.display="none";
+  b.textContent=text;
+  report();
+});
+</script></body></html>
