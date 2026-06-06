@@ -155,14 +155,17 @@ module.exports = function initMenu(ctx) {
     // ── AI status (read-only, rebuilt each time menu opens) ──
     if (typeof ctx.getAiMenuStatus === "function") {
       const ai = ctx.getAiMenuStatus();
-      const stateIcons = { ONLINE: "●", READY: "◐", DISABLED: "○", OFFLINE: "✕", ERROR: "⚠" };
-      const icon = stateIcons[ai.state] || "?";
+      const netIcon = ai.network === "OFFLINE" ? "✕" : "●";
+      const keyIcon = ai.key === "VALID" ? "●" : ai.key === "INVALID" ? "⚠" : "○";
+      const rtIcon = ai.runtime === "SUCCESS" ? "●" : ai.runtime === "FAIL" ? "⚠" : "○";
+      const disabled = ai.disabled ? " (no key)" : "";
       items.push(
         { type: "separator" },
-        { label: `AI  ${icon} ${ai.state}`, enabled: false },
-        { label: `   ${ai.used} / ${ai.total} calls today`, enabled: false },
-        { label: `   ${ai.remaining} remaining`, enabled: false },
-        { label: `   cooldown: ${ai.cooldown}`, enabled: false },
+        { label: `AI${disabled}`, enabled: false },
+        { label: `   ${netIcon} Network: ${ai.network}`, enabled: false },
+        { label: `   ${keyIcon} Key: ${ai.key}`, enabled: false },
+        { label: `   ${rtIcon} Runtime: ${ai.runtime}`, enabled: false },
+        { label: `   ${ai.used} / ${ai.total} calls | cd: ${ai.cooldown}`, enabled: false },
         { type: "separator" },
       );
     }
@@ -400,12 +403,17 @@ module.exports = function initMenu(ctx) {
     // ── AI status (read-only) ──
     if (typeof ctx.getAiMenuStatus === "function") {
       const ai = ctx.getAiMenuStatus();
-      const icons = { ONLINE: "●", READY: "◐", DISABLED: "○", OFFLINE: "✕", ERROR: "⚠" };
+      const netIcon = ai.network === "OFFLINE" ? "✕" : "●";
+      const keyIcon = ai.key === "VALID" ? "●" : ai.key === "INVALID" ? "⚠" : "○";
+      const rtIcon = ai.runtime === "SUCCESS" ? "●" : ai.runtime === "FAIL" ? "⚠" : "○";
+      const disabled = ai.disabled ? " (no key)" : "";
       template.push(
         { type: "separator" },
-        { label: `AI  ${icons[ai.state] || "?"} ${ai.state}`, enabled: false },
-        { label: `   ${ai.used} / ${ai.total} calls today`, enabled: false },
-        { label: `   ${ai.remaining} remaining`, enabled: false },
+        { label: `AI${disabled}`, enabled: false },
+        { label: `   ${netIcon} Network: ${ai.network}`, enabled: false },
+        { label: `   ${keyIcon} Key: ${ai.key}`, enabled: false },
+        { label: `   ${rtIcon} Runtime: ${ai.runtime}`, enabled: false },
+        { label: `   ${ai.used} / ${ai.total} calls | cd: ${ai.cooldown}`, enabled: false },
         { label: `   cooldown: ${ai.cooldown}`, enabled: false },
         { type: "separator" },
       );

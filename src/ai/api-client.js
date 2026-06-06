@@ -208,6 +208,7 @@ function createApiClient({ apiKey } = {}) {
         res.on("end", () => {
           if (res.statusCode === 200) {
             lastNetworkOnline = true;
+            _lastRuntimeResult = "SUCCESS";
             spendBudget();
             try {
               const json = JSON.parse(data);
@@ -217,13 +218,14 @@ function createApiClient({ apiKey } = {}) {
             } catch (e) { console.error("Clawd AI: JSON parse error:", e.message); resolve(null); }
           } else {
             console.error(`Clawd AI: HTTP ${res.statusCode}: ${data.slice(0, 200)}`);
+            _lastRuntimeResult = "FAIL";
             if (res.statusCode === 401 || res.statusCode === 403) saveTestResult({ ok: false, error: `HTTP ${res.statusCode}` });
             resolve(null);
           }
         });
       });
-      req.on("error", (e) => { console.error("Clawd AI: request failed:", e.message); resolve(null); });
-      req.on("timeout", () => { console.error("Clawd AI: request timed out"); req.destroy(); resolve(null); });
+      req.on("error", (e) => { _lastRuntimeResult = "FAIL"; console.error("Clawd AI: request failed:", e.message); resolve(null); });
+      req.on("timeout", () => { _lastRuntimeResult = "FAIL"; console.error("Clawd AI: request timed out"); req.destroy(); resolve(null); });
       req.end(body);
     });
   }
@@ -231,4 +233,14 @@ function createApiClient({ apiKey } = {}) {
   return { chat, get enabled() { return isEnabled(); }, refreshKey };
 }
 
-module.exports = { createApiClient, probeNetwork, getNetworkStatus, getBudgetStats, testApiKey, getLastTestResult, saveTestResult, saveStoredKey, loadStoredKey, resolveApiKey, setStoragePaths };
+let _lastRuntimeResult = null;
+function getAiStatus() {
+  const network = lastNetworkOnline === false ? "OFFLINE" : "ONLINE";
+  const t = getLastTestResult();
+  let key = "UNKNOWN";
+  if (t && t.at) key = t.ok ? "VALID" : "INVALID";
+  const runtime = _lastRuntimeResult || "UNKNOWN";
+  return { network, key, runtime };
+}
+
+module.exports = { createApiClient, probeNetwork, getNetworkStatus, getBudgetStats, testApiKey, getLastTestResult, saveTestResult, saveStoredKey, loadStoredKey, resolveApiKey, setStoragePaths, getAiStatus };

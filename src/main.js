@@ -2385,33 +2385,17 @@ const _menuCtx = {
   getBanterEnabled: () => _settingsController.get("banterEnabled") !== false,
   toggleBanter: (enabled) => _settingsController.applyUpdate("banterEnabled", enabled),
   getAiMenuStatus: () => {
-    const { getBudgetStats, getNetworkStatus, getLastTestResult, resolveApiKey } = require("./ai/api-client");
-    const budget = getBudgetStats();
-    const networkOnline = getNetworkStatus();
-    const hasKey = !!resolveApiKey();
-    const lastTest = getLastTestResult();
-    const cooldown = aiRouter.getCooldownStatus();
-
-    // 5-state model
-    let aiState;
-    if (networkOnline === false) {
-      aiState = "OFFLINE";
-    } else if (!hasKey) {
-      aiState = "DISABLED";
-    } else if (!lastTest || !lastTest.at) {
-      aiState = "READY";
-    } else if (lastTest.ok === true) {
-      aiState = "ONLINE";
-    } else {
-      aiState = "ERROR";
-    }
-
+    const { getBudgetStats, getAiStatus, resolveApiKey } = require("./ai/api-client");
+    const status = getAiStatus();
     return {
-      state: aiState,
-      used: budget.used,
-      total: budget.total,
-      remaining: budget.remaining,
-      cooldown,
+      network: status.network,
+      key: status.key,
+      runtime: status.runtime,
+      disabled: !resolveApiKey(),
+      used: getBudgetStats().used,
+      total: getBudgetStats().total,
+      remaining: getBudgetStats().remaining,
+      cooldown: aiRouter.getCooldownStatus(),
     };
   },
 };

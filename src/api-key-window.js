@@ -82,10 +82,10 @@ function createApiKeyWindow({ saveKey, loadKey, parentWin }) {
       });
       $('btnSave').addEventListener('click',async()=>{
         const v=$('keyInput').value.trim();
-        if(v && !testPassed)return;
         $('btnSave').disabled=true;$('btnSave').textContent='…';
         await window.apiKey.save(v);
-        $('btnSave').textContent=v?'Saved':'Cleared';$('msg').className='msg ok';$('msg').textContent=v?'Key saved.':'Key cleared — local mode.';
+        $('btnSave').textContent=v?'Saved':'Cleared';$('msg').className='msg ok';$('msg').textContent=v?'Key saved. Test to verify.':'Key cleared — local mode.';
+        $('btnSave').disabled=false;
       });
       $('btnCancel').addEventListener('click',()=>window.apiKey.close());
     </script></body></html>`)}`);
