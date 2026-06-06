@@ -14,7 +14,7 @@
     "choices": [
       { "label": "会", "intent": "agree", "valence": 2, "power": "equal", "reply": "你的自信让我害怕 😅", "repeatReply": "一如既往地自信，respect", "changedReplies": ["变乐观了？发生了什么好事"], "friendship": 1 },
       { "label": "不会", "intent": "agree", "valence": -1, "power": "equal", "reply": "至少你有经验…祝好运", "repeatReply": "悲观主义者的稳定性不错", "changedReplies": ["变悲观了？现实打击到了？"], "friendship": 0 },
-      { "label": "不敢说", "intent": "neutral", "valence": 0, "power": "equal", "reply": "最真实的答案 😌", "repeatReply": "谨慎如你", "changedReplies": ["有想法了？不错"], "friendship": 1 }
+      { "label": "不敢说", "intent": "neutral", "valence": 0, "power": "equal", "reply": "最真实的答案 😌", "repeatReply": "谨慎如你", "changedReplies": ["变谨慎了？也行"], "friendship": 1 }
     ]
   },
   {
