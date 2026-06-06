@@ -56,35 +56,42 @@ function createApiKeyWindow({ saveKey, loadKey, parentWin }) {
       <button class="save" id="btnSave" disabled>Save</button>
     </div>
     <div class="msg" id="msg"></div>
-    <div class="note">Key stored in Application Support — never in the project folder.</div>
+    <div class="note">Test first, then Save. Key stored in Application Support.</div>
     <script src="preload-api-key.js"></script>
     <script>
       const $=id=>document.getElementById(id);
-      let testPassed=false;
       (async()=>{
         const r=await window.apiKey.load();
         $('keyInput').value=r.key||'';
         $('providerSelect').value=r.provider||'deepseek';
+        // If loaded key from config has a test result → it was tested before → enable Save
+        if(r.key && r.lastTest && r.lastTest.at) $('btnSave').disabled = false;
         if(r.lastTest) $('msg').textContent=r.lastTest.ok?'Last test: OK':'Last test: '+r.lastTest.error;
       })();
       $('providerSelect').addEventListener('change',()=>{
         window.apiKey.setProvider($('providerSelect').value);
+        $('btnSave').disabled = true;
+      });
+      $('keyInput').addEventListener('input',()=>{
+        $('btnSave').disabled = true;
       });
       $('btnTest').addEventListener('click',async()=>{
         const key=$('keyInput').value.trim();
         if(!key){$('msg').className='msg err';$('msg').textContent='Enter a key first';return;}
-        $('btnTest').disabled=true;$('btnTest').textContent='…';$('btnSave').disabled=true;
+        $('btnTest').disabled=true;$('btnTest').textContent='…';
         $('msg').className='msg';$('msg').textContent='Testing…';
         const r=await window.apiKey.test(key);
         $('btnTest').textContent='Test';$('btnTest').disabled=false;
-        if(r.ok){testPassed=true;$('btnSave').disabled=false;$('msg').className='msg ok';$('msg').textContent='OK — key works';}
-        else{testPassed=false;$('btnSave').disabled=true;$('msg').className='msg err';$('msg').textContent=r.error||'Test failed';}
+        $('btnSave').disabled = false;
+        if(r.ok){$('msg').className='msg ok';$('msg').textContent='OK — key works';}
+        else{$('msg').className='msg err';$('msg').textContent=r.error||'Test failed';}
       });
       $('btnSave').addEventListener('click',async()=>{
         const v=$('keyInput').value.trim();
         $('btnSave').disabled=true;$('btnSave').textContent='…';
         await window.apiKey.save(v);
-        $('btnSave').textContent=v?'Saved':'Cleared';$('msg').className='msg ok';$('msg').textContent=v?'Key saved. Test to verify.':'Key cleared — local mode.';
+        $('btnSave').textContent='Saved';
+        $('msg').className='msg ok';$('msg').textContent=v?'Key saved.':'Key cleared — local mode.';
         $('btnSave').disabled=false;
       });
       $('btnCancel').addEventListener('click',()=>window.apiKey.close());
@@ -95,7 +102,6 @@ function createApiKeyWindow({ saveKey, loadKey, parentWin }) {
   // IPC
   ipcMain.handle("apikey:load", () => {
     const { getLastTestResult } = require("./ai/api-client");
-    // Read provider from config.json
     let provider = "deepseek";
     try {
       const userData = require("electron").app.getPath("userData");
@@ -115,9 +121,9 @@ function createApiKeyWindow({ saveKey, loadKey, parentWin }) {
     return { ok: true };
   });
   ipcMain.handle("apikey:test", async (_e, key) => {
-    const { testApiKey, saveTestResult } = require("./ai/api-client");
+    const { testApiKey, savePendingTestResult } = require("./ai/api-client");
     const result = await testApiKey(key);
-    saveTestResult(result);
+    savePendingTestResult(result);
     return result;
   });
   ipcMain.handle("apikey:save", (_e, key) => { saveKey(key); return { ok: true }; });

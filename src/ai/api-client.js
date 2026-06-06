@@ -50,13 +50,15 @@ function saveStoredKey(apiKey) {
     const dir = path.dirname(_keyFile);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     const existing = JSON.parse(fs.readFileSync(_keyFile, "utf8") || "{}");
-    delete existing.lastTest; // new key → clear old test result
+    if (existing.apiKey !== apiKey) delete existing.lastTest;
     const cfg = { ...existing, apiKey: valid ? apiKey : "", provider: prov.model.includes("deepseek") ? "deepseek" : existing.provider || "deepseek" };
     fs.writeFileSync(_keyFile, JSON.stringify(cfg, null, 2), "utf8");
+    commitPendingTestResult();
     if (typeof _onKeyChanged === "function") _onKeyChanged(apiKey || "");
   } catch {
     const cfg = { apiKey: valid ? apiKey : "" };
     try { fs.writeFileSync(_keyFile, JSON.stringify(cfg, null, 2), "utf8"); } catch {}
+    commitPendingTestResult();
     if (typeof _onKeyChanged === "function") _onKeyChanged(apiKey || "");
   }
 }
@@ -70,12 +72,31 @@ function getLastTestResult() {
   } catch { return { status: "DISABLED" }; }
 }
 
+// Pending test — stored in memory until Save commits it
+let _pendingTestResult = null;
+
 function saveTestResult(result) {
   if (!_keyFile) return;
   try {
     const cfg = JSON.parse(fs.readFileSync(_keyFile, "utf8") || "{}");
     cfg.lastTest = { ...result, at: Date.now() };
     fs.writeFileSync(_keyFile, JSON.stringify(cfg, null, 2), "utf8");
+  } catch {}
+}
+
+// For Test IPC: store in memory only, not yet committed
+function savePendingTestResult(result) {
+  _pendingTestResult = result;
+}
+
+// Called by saveStoredKey: commit pending test alongside the key
+function commitPendingTestResult() {
+  if (!_keyFile || !_pendingTestResult) return;
+  try {
+    const cfg = JSON.parse(fs.readFileSync(_keyFile, "utf8") || "{}");
+    cfg.lastTest = { ..._pendingTestResult, at: Date.now() };
+    fs.writeFileSync(_keyFile, JSON.stringify(cfg, null, 2), "utf8");
+    _pendingTestResult = null;
   } catch {}
 }
 
@@ -243,4 +264,4 @@ function getAiStatus() {
   return { network, key, runtime };
 }
 
-module.exports = { createApiClient, probeNetwork, getNetworkStatus, getBudgetStats, testApiKey, getLastTestResult, saveTestResult, saveStoredKey, loadStoredKey, resolveApiKey, setStoragePaths, getAiStatus };
+module.exports = { createApiClient, probeNetwork, getNetworkStatus, getBudgetStats, testApiKey, getLastTestResult, saveTestResult, savePendingTestResult, commitPendingTestResult, saveStoredKey, loadStoredKey, resolveApiKey, setStoragePaths, getAiStatus };
