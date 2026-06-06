@@ -414,7 +414,6 @@ module.exports = function initMenu(ctx) {
         { label: `   ${keyIcon} Key: ${ai.key}`, enabled: false },
         { label: `   ${rtIcon} Runtime: ${ai.runtime}`, enabled: false },
         { label: `   ${ai.used} / ${ai.total} calls | cd: ${ai.cooldown}`, enabled: false },
-        { label: `   cooldown: ${ai.cooldown}`, enabled: false },
         { type: "separator" },
       );
     }
