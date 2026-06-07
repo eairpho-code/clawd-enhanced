@@ -908,6 +908,8 @@ function initUpdater(ctx, deps = {}) {
   }
 
   function startUpdateScheduler() {
+    log("scheduler: auto-update disabled in this fork");
+    return;
     // Primary guard: only packaged builds. !app.isPackaged covers the
     // zip-source-drop / mid-build-artifacts case that getRepoRoot() misses.
     if (!app.isPackaged) {
@@ -1086,6 +1088,8 @@ function initUpdater(ctx, deps = {}) {
   }
 
   async function checkForUpdates(arg = true) {
+    log("update check disabled in this fork");
+    return;
     if (updateStatus === "checking" || updateStatus === "downloading") {
       log(`Check skipped: already ${updateStatus}`);
       return;
