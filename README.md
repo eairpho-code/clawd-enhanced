@@ -69,3 +69,13 @@ Right click → Open (if security warning appears)
 ---
 
 ## 🐾 Enjoy your enhanced desktop companion
+
+---
+
+## ⚠️ Disclaimer
+
+Clawd character is the property of Anthropic.
+
+This is an unofficial fan-made fork of the original Clawd on Desk project.
+
+This project is not affiliated with, endorsed by, or officially associated with Anthropic or the original authors.
