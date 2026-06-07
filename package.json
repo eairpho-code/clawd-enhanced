@@ -67,7 +67,7 @@
       }
     ],
     "mac": {
-      "icon": "assets/icon.png",
+      "icon": "assets/applet.icns",
       "artifactName": "Clawd-on-Desk-${version}-${arch}.${ext}",
       "target": [
         {
@@ -138,7 +138,8 @@
       "hooks/**/*",
       "extensions/**/*",
       "agents/**/*",
-      "themes/**/*"
+      "themes/**/*",
+      "data/**/*"
     ],
     "asarUnpack": [
       "assets/svg/**/*",
@@ -163,7 +164,8 @@
         "repo": "clawd-on-desk"
       }
     ],
-    "electronVersion": "41.0.2"
+    "electronVersion": "41.0.2",
+    "afterSign": "build/after-sign.js"
   },
   "devDependencies": {
     "electron": "^41.0.2",

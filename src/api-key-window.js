@@ -77,7 +77,7 @@ function createApiKeyWindow({ saveKey, loadKey, parentWin }) {
       });
       $('btnTest').addEventListener('click',async()=>{
         const key=$('keyInput').value.trim();
-        if(!key){$('msg').className='msg err';$('msg').textContent='Enter a key first';return;}
+        if(!key){$('btnSave').disabled=false;$('msg').className='msg ok';$('msg').textContent='Empty key = local mode. Save to apply.';return;}
         $('btnTest').disabled=true;$('btnTest').textContent='…';
         $('msg').className='msg';$('msg').textContent='Testing…';
         const r=await window.apiKey.test(key);

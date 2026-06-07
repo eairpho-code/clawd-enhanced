@@ -2381,6 +2381,7 @@ const _menuCtx = {
   openBanterSettings: () => openBanterSettings(),
   openApiKeyWindow: () => apiKeyWindow.open(),
   openChatWindow: () => chatWindow.open(),
+  isChatVisible: () => chatWindow.isVisible(),
   isAiAvailable: () => aiRouter.isAiEnabled(),
   getBanterEnabled: () => _settingsController.get("banterEnabled") !== false,
   toggleBanter: (enabled) => _settingsController.applyUpdate("banterEnabled", enabled),

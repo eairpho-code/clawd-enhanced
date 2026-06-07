@@ -177,7 +177,7 @@ module.exports = function initMenu(ctx) {
       { type: "separator" },
       {
         label: "Chat with Clawd…",
-        enabled: typeof ctx.isAiAvailable === "function" ? ctx.isAiAvailable() : false,
+        enabled: (typeof ctx.isChatVisible === "function" && ctx.isChatVisible()) || (typeof ctx.isAiAvailable === "function" && ctx.isAiAvailable()),
         click: () => { if (typeof ctx.openChatWindow === "function") ctx.openChatWindow(); },
       },
       { type: "separator" },
@@ -425,7 +425,7 @@ module.exports = function initMenu(ctx) {
       { type: "separator" },
       {
         label: "Chat with Clawd…",
-        enabled: typeof ctx.isAiAvailable === "function" ? ctx.isAiAvailable() : false,
+        enabled: (typeof ctx.isChatVisible === "function" && ctx.isChatVisible()) || (typeof ctx.isAiAvailable === "function" && ctx.isAiAvailable()),
         click: () => { if (typeof ctx.openChatWindow === "function") ctx.openChatWindow(); },
       },
       { type: "separator" },

@@ -129,7 +129,7 @@ function createChatWindow({ apiClient, aiRouter, getPetBounds, getPersonality })
     return { reply };
   });
 
-  return { open, toggle };
+  return { open, toggle, isVisible: () => !!(win && !win.isDestroyed()) };
 }
 
 module.exports = { createChatWindow };
