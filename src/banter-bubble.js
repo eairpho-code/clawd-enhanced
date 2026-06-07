@@ -19,6 +19,8 @@ function createBanterBubble(options = {}) {
   let bubbleWin = null;
   let hideTimer = null;
   let fadeTimer = null;
+  let currentColor = options.color || "#1e1e1e";
+  let currentOpacity = options.opacity || 88;
   let currentScale = options.scale || 100;
 
   // Sync module-level ref
@@ -87,6 +89,18 @@ function createBanterBubble(options = {}) {
     }, ms);
   }
 
+  function applyStyle() {
+    if (!bubbleWin || bubbleWin.isDestroyed()) return;
+    const r = parseInt(currentColor.slice(1,3), 16);
+    const g = parseInt(currentColor.slice(3,5), 16);
+    const b = parseInt(currentColor.slice(5,7), 16);
+    const alpha = Math.max(0, Math.min(1, currentOpacity / 100));
+    const bg = `rgba(${r},${g},${b},${alpha})`;
+    bubbleWin.webContents.executeJavaScript(
+      `document.documentElement.style.setProperty('--bg','${bg}');`
+    ).catch(() => {});
+  }
+
   return {
     show(text, petBounds) {
       destroyWindow();
@@ -94,6 +108,7 @@ function createBanterBubble(options = {}) {
       const send = () => {
         if (!bubbleWin || bubbleWin.isDestroyed()) return;
         bubbleWin.webContents.send("banter-bubble:show-text", text);
+        applyStyle();
         startAutoDismiss(SHOW_DURATION_MS);
       };
       if (win.webContents.isLoading()) win.webContents.once("did-finish-load", send);
@@ -107,6 +122,7 @@ function createBanterBubble(options = {}) {
       const send = () => {
         if (!bubbleWin || bubbleWin.isDestroyed()) return;
         bubbleWin.webContents.send("banter-bubble:interaction", { question, choices });
+        applyStyle();
       };
       if (win.webContents.isLoading()) win.webContents.once("did-finish-load", send);
       else send();
@@ -127,7 +143,9 @@ function createBanterBubble(options = {}) {
       });
     },
 
-    updateConfig({ scale } = {}) {
+    updateConfig({ color, opacity, scale } = {}) {
+      if (color !== undefined) currentColor = color;
+      if (opacity !== undefined) currentOpacity = opacity;
       if (scale !== undefined) currentScale = scale;
     },
 

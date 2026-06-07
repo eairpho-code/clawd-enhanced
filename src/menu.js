@@ -190,12 +190,6 @@ module.exports = function initMenu(ctx) {
         },
       },
       {
-        label: "Banter Settings…",
-        click: () => {
-          if (typeof ctx.openBanterSettings === "function") ctx.openBanterSettings();
-        },
-      },
-      {
         label: t("settings"),
         click: () => ctx.openSettingsWindow(),
       },
@@ -435,12 +429,6 @@ module.exports = function initMenu(ctx) {
         checked: typeof ctx.getBanterEnabled === "function" ? ctx.getBanterEnabled() : true,
         click: (mi) => {
           if (typeof ctx.toggleBanter === "function") ctx.toggleBanter(mi.checked);
-        },
-      },
-      {
-        label: "Banter Settings…",
-        click: () => {
-          if (typeof ctx.openBanterSettings === "function") ctx.openBanterSettings();
         },
       },
       {

@@ -1192,27 +1192,15 @@ _stateCtx.showBanterBubble = (text) => {
 _stateCtx.isBanterEnabled = () => _settingsController.get("banterEnabled") !== false;
 
 // Track banter prefs changes
-_settingsController.subscribeKey("banterColor", ({ snapshot }) => {
-  banterBubble.updateConfig({ color: snapshot.banterColor || "#1e1e1e" });
+_settingsController.subscribeKey("banterColor", (value) => {
+  banterBubble.updateConfig({ color: value || "#1e1e1e" });
 });
-_settingsController.subscribeKey("banterOpacity", ({ snapshot }) => {
-  banterBubble.updateConfig({ opacity: snapshot.banterOpacity ?? 88 });
+_settingsController.subscribeKey("banterOpacity", (value) => {
+  banterBubble.updateConfig({ opacity: value ?? 88 });
 });
-_settingsController.subscribeKey("banterScale", ({ snapshot }) => {
-  banterBubble.updateConfig({ scale: snapshot.banterScale ?? 100 });
+_settingsController.subscribeKey("banterScale", (value) => {
+  banterBubble.updateConfig({ scale: value ?? 100 });
 });
-
-// ── Banter settings panel ──
-const { createBanterSettingsWindow } = require("./banter-settings");
-const banterSettingsPanel = createBanterSettingsWindow({
-  settingsController: _settingsController,
-  banterBubble,
-  getPetBounds: () => getPetWindowBounds(),
-  parentWin: null, // filled in after pet window creation
-});
-function openBanterSettings() {
-  banterSettingsPanel.open();
-}
 
 // ── AI Interaction Layer ──
 const banterModule = require("./banter");
@@ -1257,7 +1245,7 @@ const ambientBanter = createAmbientBanter({
     }
     return latest;
   },
-  showBubble: (text, bounds) => { if (bounds && bounds.width) banterBubble.show(text, bounds); },
+  showBubble: (text, bounds) => { if (_settingsController.get("banterEnabled") === false) return; if (bounds && bounds.width) banterBubble.show(text, bounds); },
   isBusy: () => banterBubble.isVisible(),
 });
 ambientBanter.start();
@@ -2378,7 +2366,6 @@ const _menuCtx = {
   getActiveThemeCapabilities: () => themeRuntime.getActiveThemeCapabilities(),
   ensureUserThemesDir: () => themeLoader.ensureUserThemesDir(),
   openSettingsWindow: () => settingsWindowRuntime.open(),
-  openBanterSettings: () => openBanterSettings(),
   openApiKeyWindow: () => apiKeyWindow.open(),
   openChatWindow: () => chatWindow.open(),
   isChatVisible: () => chatWindow.isVisible(),
